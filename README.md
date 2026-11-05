@@ -33,4 +33,3 @@ Python · PyTorch · TensorFlow/Keras · Hugging Face Transformers, Datasets, PE
 - Paths like `/content/drive/...` refer to Google Drive mounted in Colab.
 - In the Neo4j notebook, the database password was replaced with a placeholder before publishing.
 - Colab's saved widget metadata was rewrapped in the standard `state` format so GitHub can preview the notebooks. Code cells and outputs are unchanged.
-- If a large notebook doesn't preview on GitHub, open it on [nbviewer](https://nbviewer.org/) instead.
