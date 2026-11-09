@@ -5,9 +5,26 @@ Coursework on large language models and generative models: tokenization and embe
 All notebooks were run in **Google Colab** (mostly on a T4 GPU) and are shown here **with their original outputs**.
 
 ## Highlights
-- **[LoRA Fine-Tuning for Software Vulnerability Detection](lora_vulnerability_detection.ipynb)**: fine-tunes TinyLlama-1.1B with LoRA to classify C functions from the Devign (CodeXGLUE) dataset as vulnerable or safe. Covers preprocessing, token-length analysis, stratified sampling and evaluation.
+- **[LoRA Fine-Tuning for Software Vulnerability Detection](lora_vulnerability_detection.ipynb)**: fine-tunes TinyLlama-1.1B with 4-bit QLoRA (4.5M trainable parameters, 0.43% of the model) to classify C functions from the Devign (CodeXGLUE) dataset as vulnerable or safe, and compares it against a TF-IDF + logistic regression baseline. The baseline won; [results and analysis below](#lora-vs-a-classical-baseline).
 - **[Retrieval-Augmented Generation](Assignment_3_RAG-1.ipynb)**: a RAG pipeline built with LangChain, a Chroma vector store, MiniLM embeddings and Phi-3-mini, served through a Gradio interface.
 - **[GRPO Fine-Tuning](Assignment_7_GRPO-1.ipynb)**: reinforcement-learning fine-tuning on GSM8K math reasoning with custom reward functions for answer correctness and format.
+
+## LoRA vs. a classical baseline
+
+Both models were trained on the same 4,000 deduplicated Devign functions and scored on the same stratified 1,000-function test set.
+
+| Model | Accuracy | Precision | Recall | F1 |
+|---|---|---|---|---|
+| TinyLlama-1.1B + QLoRA (r=16, 2 epochs on a T4, ~45 min) | 56.8% | 0.537 | 0.425 | 0.474 |
+| TF-IDF + logistic regression (seconds on a CPU) | **60.3%** | **0.591** | **0.438** | **0.503** |
+
+The fine-tuned LLM lost at this scale. The likely reasons:
+- **Too little training.** 4,000 examples is about a fifth of the Devign training split, and validation F1 was still rising when training stopped, so the model was undertrained rather than at its limit.
+- **Truncation.** About 32% of functions are longer than the 512-token context, so a vulnerability near the end of a long function was never seen.
+- **The backbone.** TinyLlama is a small general-purpose model, not one pretrained mainly on code, and its classification head has to be learned from the 4,000 labelled examples.
+- **Lexical shortcuts.** Devign comes from only two projects (FFmpeg and QEMU), so project-specific identifiers help a bag-of-tokens model score well without generalizing.
+
+The practical lesson: benchmark a cheap classical baseline before paying for LLM fine-tuning. The next steps would be training on the full split, a longer-context or code-pretrained backbone, and chunking long functions instead of truncating them.
 
 ## Notebooks
 | Notebook | Topic |
